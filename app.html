@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ReadIn (Vanilla)</title>
+  <base target="_top" />
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #222222;
+      --muted: #666666;
+      --accent-a: #2a7b9b;
+      --accent-b: #3993dd;
+      --accent-c: #eddd53;
+      --shadow: rgba(0, 0, 0, 0.06);
+      --border: rgba(0, 0, 0, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
+
+    /* Header */
+    .simple-header {
+      position: relative;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      align-items: center;
+      justify-items: center;
+      height: 72px;
+      padding: 0 8px;
+      color: #fff;
+      background: linear-gradient(90deg, var(--accent-a), #a2c3a4 0, var(--accent-b) 50%, var(--accent-c));
+      z-index: 1001;
+    }
+    .left-icons { display: flex; align-items: center; gap: 8px; justify-self: start; }
+    .text-btn {
+      border: none; background: transparent; color: #fff; cursor: pointer;
+      padding: 4px 8px; font-weight: 700; font-size: 1.05rem; transition: opacity .18s;
+    }
+    .text-btn:hover { opacity: .9; }
+    .simple-title { margin: 0; font-size: 1.5rem; font-weight: 800; }
+
+    /* Layout */
+    .app-container { min-height: calc(100vh - 72px); display: flex; flex-direction: column; gap: 16px; align-items: center; justify-content: center; padding: 12px; }
+
+    /* Discover card */
+    .portrait-box {
+      width: 320px; height: 480px; display: flex; flex-direction: column; overflow: hidden;
+      background: #fff; border: 1px solid rgba(0,0,0,0.12); border-radius: 10px; box-shadow: 0 6px 18px var(--shadow);
+    }
+    .cover-image { width: 100%; height: 60%; object-fit: cover; display: block; }
+    .book-info { padding: 12px 14px; gap: 8px; display: flex; flex-direction: column; height: 40%; overflow: hidden; }
+    .book-title { margin: 0; font-size: 1.05rem; font-weight: 800; }
+    .book-desc { margin: 0; color: #333; font-size: .92rem; line-height: 1.25; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; }
+
+    .controls { display: flex; gap: 12px; }
+    .btn { min-width: 56px; min-height: 40px; border-radius: 6px; border: 1px solid rgba(0,0,0,0.1); background: #fff; font-weight: 700; cursor: pointer; }
+    .btn:hover { background: rgba(0,0,0,.04); }
+
+    .saved-count { margin-top: 6px; font-size: .92rem; color: #444; }
+
+    /* Animations */
+    @keyframes rotate-left { 0%{transform: rotate(0)} 40%{transform: rotate(-8deg)} 100%{transform: rotate(0)} }
+    @keyframes rotate-right { 0%{transform: rotate(0)} 40%{transform: rotate(8deg)} 100%{transform: rotate(0)} }
+    .rotate-left { transform-origin: center; animation: rotate-left .5s ease forwards; }
+    .rotate-right { transform-origin: center; animation: rotate-right .5s ease forwards; }
+
+    /* Lists */
+    .lists-page { align-items: stretch; }
+    .reading-list-section { width: 100%; max-width: 980px; background: #fff; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,.08); padding: 20px; }
+    .section-title { margin: 0 0 16px; font-size: 1.2rem; font-weight: 800; color: #333; }
+
+    .books-container { display: flex; align-items: center; gap: 12px; }
+    .scroll-btn { width: 32px; height: 32px; border-radius: 50%; border: none; background: rgba(0,0,0,.1); color: #333; cursor: pointer; }
+    .scroll-btn:hover { background: rgba(0,0,0,.18); }
+
+    .saved-books-list { display: flex; gap: 14px; overflow-x: auto; scroll-behavior: smooth; padding: 4px 0; }
+    .saved-books-list::-webkit-scrollbar { display: none; }
+
+    .saved-book-card { width: 130px; background: #fff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,.1); overflow: hidden; flex: 0 0 auto; }
+    .saved-book-cover { width: 100%; height: 180px; object-fit: cover; display: block; }
+    .saved-book-info { padding: 8px; }
+    .saved-book-title { margin: 0; font-size: .85rem; font-weight: 700; line-height: 1.2; }
+    .saved-book-author { margin: 2px 0 0; font-size: .75rem; color: var(--muted); }
+
+    .read-btn { width: 100%; margin: 8px 0 10px; padding: 6px 10px; border: 1px solid var(--border); background: #fff; border-radius: 6px; cursor: pointer; font-weight: 700; }
+    .read-btn:hover { background: rgba(0,0,0,.04); }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <header class="simple-header">
+    <div class="left-icons">
+      <button class="text-btn" id="btnLists" title="Open lists" aria-label="Open lists">Lists</button>
+      <button class="text-btn" id="btnDiscover" title="Discover" aria-label="Discover">Discover</button>
+    </div>
+    <div class="header-title"><h1 class="simple-title">ReadIn</h1></div>
+  </header>
+
+  <!-- Discover Page -->
+  <main class="app-container" id="discoverPage">
+    <div class="portrait-box" id="card">
+      <img id="cover" class="cover-image" alt="Book Cover" />
+      <div class="book-info">
+        <h2 id="title" class="book-title"></h2>
+        <p id="desc" class="book-desc"></p>
+      </div>
+    </div>
+    <div class="controls">
+      <button id="btnCheck" class="btn" aria-label="Confirm">✓</button>
+      <button id="btnX" class="btn" aria-label="Reject">✕</button>
+    </div>
+    <div class="saved-count">Saved: <span id="savedCount">0</span></div>
+  </main>
+
+  <!-- Lists Page -->
+  <main class="app-container lists-page hidden" id="listsPage">
+    <section class="reading-list-section">
+      <h2 class="section-title">Reading List</h2>
+      <div class="books-container">
+        <button class="scroll-btn" id="scrollSavedLeft" aria-label="Scroll left">‹</button>
+        <div class="saved-books-list" id="savedList"></div>
+        <button class="scroll-btn" id="scrollSavedRight" aria-label="Scroll right">›</button>
+      </div>
+    </section>
+
+    <section class="reading-list-section" style="margin-top: 16px;">
+      <h2 class="section-title">Read Books</h2>
+      <div class="books-container">
+        <button class="scroll-btn" id="scrollReadLeft" aria-label="Scroll left">‹</button>
+        <div class="saved-books-list" id="readList"></div>
+        <button class="scroll-btn" id="scrollReadRight" aria-label="Scroll right">›</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // --- Data ---
+    const BOOKS = [
+      { id: 1, title: "The Great Gatsby", author: "F. Scott Fitzgerald", description: "A story of decadence and excess, Gatsby explores the darker aspects of the American Dream.", coverUrl: "https://m.media-amazon.com/images/I/71YF1hHLw7L._AC_UF894,1000_QL80_.jpg" },
+      { id: 2, title: "To Kill a Mockingbird", author: "Harper Lee", description: "A story of racial injustice and the loss of innocence in the American South.", coverUrl: "https://dauntbooks.co.uk/wp-content/uploads/2020/06/9780099549482.jpg" },
+      { id: 3, title: "1984", author: "George Orwell", description: "A dystopian novel set in a totalitarian society, exploring themes of surveillance and control.", coverUrl: "https://m.media-amazon.com/images/I/71wANojhEKL._AC_UF894,1000_QL80_.jpg" },
+    ];
+
+    // --- State ---
+    let idx = 0;
+    const saved = [];
+    const read = [];
+
+    // --- DOM ---
+    const discoverPage = document.getElementById('discoverPage');
+    const listsPage = document.getElementById('listsPage');
+
+    const card = document.getElementById('card');
+    const cover = document.getElementById('cover');
+    const titleEl = document.getElementById('title');
+    const descEl = document.getElementById('desc');
+    const savedCountEl = document.getElementById('savedCount');
+
+    const btnCheck = document.getElementById('btnCheck');
+    const btnX = document.getElementById('btnX');
+    const btnLists = document.getElementById('btnLists');
+    const btnDiscover = document.getElementById('btnDiscover');
+
+    const savedList = document.getElementById('savedList');
+    const readList = document.getElementById('readList');
+
+    // --- Helpers ---
+    function next() { idx = (idx + 1) % BOOKS.length; renderDiscover(); }
+
+    function renderDiscover() {
+      const b = BOOKS[idx];
+      if (!b) { titleEl.textContent = 'No book'; descEl.textContent = ''; cover.removeAttribute('src'); return; }
+      cover.src = b.coverUrl;
+      cover.alt = b.title;
+      titleEl.textContent = b.title;
+      descEl.textContent = b.description;
+      savedCountEl.textContent = String(saved.length);
+    }
+
+    function renderLists() {
+      // Saved list
+      if (!saved.length) {
+        savedList.innerHTML = '<p style="color:#666; font-style: italic; padding: 10px 0;">No books saved yet. Click ✓ to add books to your list.</p>';
+      } else {
+        savedList.innerHTML = saved.map(b => `
+          <div class="saved-book-card" data-id="${b.id}">
+            <img class="saved-book-cover" src="${b.coverUrl}" alt="${b.title}" />
+            <div class="saved-book-info">
+              <h3 class="saved-book-title">${b.title}</h3>
+              <p class="saved-book-author">${b.author}</p>
+            </div>
+            <button class="read-btn" data-action="mark-read" data-id="${b.id}">Read</button>
+          </div>
+        `).join('');
+      }
+
+      // Read list
+      if (!read.length) {
+        readList.innerHTML = '<p style="color:#666; font-style: italic; padding: 10px 0;">No books marked as read yet.</p>';
+      } else {
+        readList.innerHTML = read.map(b => `
+          <div class="saved-book-card" data-id="${b.id}">
+            <img class="saved-book-cover" src="${b.coverUrl}" alt="${b.title}" />
+            <div class="saved-book-info">
+              <h3 class="saved-book-title">${b.title}</h3>
+              <p class="saved-book-author">${b.author}</p>
+            </div>
+            <button class="read-btn" data-action="mark-unread" data-id="${b.id}">Unread</button>
+          </div>
+        `).join('');
+      }
+    }
+
+    function showDiscover() { discoverPage.classList.remove('hidden'); listsPage.classList.add('hidden'); }
+    function showLists() { discoverPage.classList.add('hidden'); listsPage.classList.remove('hidden'); renderLists(); }
+
+    // --- Events ---
+    btnCheck.addEventListener('click', () => {
+      const b = BOOKS[idx];
+      if (!b) return;
+      if (!saved.find(x => x.id === b.id) && !read.find(x => x.id === b.id)) {
+        saved.push(b);
+        savedCountEl.textContent = String(saved.length);
+      }
+      card.classList.remove('rotate-left','rotate-right');
+      void card.offsetWidth; // reflow for animation
+      card.classList.add('rotate-left');
+      setTimeout(() => card.classList.remove('rotate-left'), 520);
+      next();
+    });
+
+    btnX.addEventListener('click', () => {
+      card.classList.remove('rotate-left','rotate-right');
+      void card.offsetWidth;
+      card.classList.add('rotate-right');
+      setTimeout(() => card.classList.remove('rotate-right'), 520);
+      next();
+    });
+
+    btnLists.addEventListener('click', showLists);
+    btnDiscover.addEventListener('click', showDiscover);
+
+    // Delegate clicks in lists
+    savedList.addEventListener('click', (e) => {
+      const t = e.target;
+      if (!(t instanceof HTMLElement)) return;
+      const action = t.getAttribute('data-action');
+      const id = Number(t.getAttribute('data-id'));
+      if (action === 'mark-read') {
+        const i = saved.findIndex(x => x.id === id);
+        if (i >= 0) { const b = saved.splice(i,1)[0]; read.push(b); savedCountEl.textContent = String(saved.length); renderLists(); }
+      }
+    });
+
+    readList.addEventListener('click', (e) => {
+      const t = e.target;
+      if (!(t instanceof HTMLElement)) return;
+      const action = t.getAttribute('data-action');
+      const id = Number(t.getAttribute('data-id'));
+      if (action === 'mark-unread') {
+        const i = read.findIndex(x => x.id === id);
+        if (i >= 0) { const b = read.splice(i,1)[0]; saved.push(b); savedCountEl.textContent = String(saved.length); renderLists(); }
+      }
+    });
+
+    // Scroll buttons
+    document.getElementById('scrollSavedLeft').addEventListener('click', () => savedList.scrollBy({ left: -200, behavior: 'smooth' }));
+    document.getElementById('scrollSavedRight').addEventListener('click', () => savedList.scrollBy({ left: 200, behavior: 'smooth' }));
+    document.getElementById('scrollReadLeft').addEventListener('click', () => readList.scrollBy({ left: -200, behavior: 'smooth' }));
+    document.getElementById('scrollReadRight').addEventListener('click', () => readList.scrollBy({ left: 200, behavior: 'smooth' }));
+
+    // Init
+    renderDiscover();
+  </script>
+</body>
+</html>

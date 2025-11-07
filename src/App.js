@@ -5,6 +5,7 @@ import booksData from './data/books';
 function App() {
   const [index, setIndex] = useState(0);
   const [saved, setSaved] = useState([]);
+  const [readBooks, setReadBooks] = useState([]);
   const [anim, setAnim] = useState('');
   const [route, setRoute] = useState('home');
 
@@ -17,24 +18,41 @@ function App() {
 
   const handleConfirm = () => {
     if (!current) return;
-    setSaved((prev) => {
-      // avoid duplicates by id
-      if (prev.find((b) => b.id === current.id)) return prev;
-      return [...prev, current];
-    });
-    // trigger left-then-back rotation
+    // Prevent saving if already in saved or readBooks
+    const alreadySaved = saved.find((b) => b.id === current.id);
+    const alreadyRead = readBooks.find((b) => b.id === current.id);
+    if (alreadySaved || alreadyRead) {
+      setAnim('rotate-left');
+      setTimeout(() => setAnim(''), 500);
+      nextBook();
+      return;
+    }
+    setSaved((prev) => [...prev, current]);
     setAnim('rotate-left');
     setTimeout(() => setAnim(''), 500);
     nextBook();
-    console.log('Confirmed', current.title);
   };
 
   const handleReject = () => {
-    // trigger right-then-back rotation
     setAnim('rotate-right');
     setTimeout(() => setAnim(''), 500);
-    console.log('Rejected', current ? current.title : null);
     nextBook();
+  };
+
+  const markAsRead = (bookId) => {
+    const book = saved.find((b) => b.id === bookId);
+    if (book) {
+      setSaved((prev) => prev.filter((b) => b.id !== bookId));
+      setReadBooks((prev) => [...prev, book]);
+    }
+  };
+
+  const markAsUnread = (bookId) => {
+    const book = readBooks.find((b) => b.id === bookId);
+    if (book) {
+      setReadBooks((prev) => prev.filter((b) => b.id !== bookId));
+      setSaved((prev) => [...prev, book]);
+    }
   };
 
   return (
@@ -49,7 +67,6 @@ function App() {
           >
             Lists
           </button>
-
           <button
             className="text-btn"
             aria-label="Discover (go home)"
@@ -59,7 +76,6 @@ function App() {
             Discover
           </button>
         </div>
-
         <div className="header-title">
           <h1 className="simple-title">ReadIn</h1>
         </div>
@@ -104,7 +120,7 @@ function App() {
                 ‹
               </button>
               
-              <div className="saved-books-list">
+              <div className="saved-books-list horizontal-scroll">
                 {saved.length === 0 ? (
                   <p className="no-saved-books">No books saved yet. Click ✓ to add books to your list.</p>
                 ) : (
@@ -119,6 +135,12 @@ function App() {
                         <h3 className="saved-book-title">{book.title}</h3>
                         <p className="saved-book-author">{book.author}</p>
                       </div>
+                      <button 
+                        className="read-btn"
+                        onClick={() => markAsRead(book.id)}
+                      >
+                        Read
+                      </button>
                     </div>
                   ))
                 )}
@@ -128,6 +150,59 @@ function App() {
                 className="scroll-btn scroll-right" 
                 onClick={() => {
                   const container = document.querySelector('.saved-books-list');
+                  container.scrollBy({ left: 200, behavior: 'smooth' });
+                }}
+                aria-label="Scroll right"
+              >
+                ›
+              </button>
+            </div>
+          </div>
+
+          <div className="reading-list-section">
+            <h2 className="section-title">Read Books</h2>
+            <div className="books-container">
+              <button 
+                className="scroll-btn scroll-left" 
+                onClick={() => {
+                  const container = document.querySelector('.saved-books-list.horizontal-scroll');
+                  container.scrollBy({ left: -200, behavior: 'smooth' });
+                }}
+                aria-label="Scroll left"
+              >
+                ‹
+              </button>
+
+              <div className="saved-books-list horizontal-scroll">
+                {readBooks.length === 0 ? (
+                  <p className="no-saved-books">No books marked as read yet.</p>
+                ) : (
+                  readBooks.map(book => (
+                    <div key={book.id} className="saved-book-card">
+                      <img 
+                        src={book.coverUrl} 
+                        alt={book.title} 
+                        className="saved-book-cover"
+                      />
+                      <div className="saved-book-info">
+                        <h3 className="saved-book-title">{book.title}</h3>
+                        <p className="saved-book-author">{book.author}</p>
+                      </div>
+                      <button 
+                        className="read-btn"
+                        onClick={() => markAsUnread(book.id)}
+                      >
+                        Unread
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <button 
+                className="scroll-btn scroll-right" 
+                onClick={() => {
+                  const container = document.querySelector('.saved-books-list.horizontal-scroll');
                   container.scrollBy({ left: 200, behavior: 'smooth' });
                 }}
                 aria-label="Scroll right"

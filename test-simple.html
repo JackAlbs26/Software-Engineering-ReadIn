@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test</title>
+    <base target="_top">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: linear-gradient(90deg, #2a7b9b, #a2c3a4 0, #3993dd 50%, #eddd53);
+        }
+        h1 { color: white; }
+    </style>
+</head>
+<body>
+    <h1>Test - Can you see this?</h1>
+    <div id="root">Loading React...</div>
+    <script>
+        console.log('Script is running!');
+        document.getElementById('root').innerHTML = '<h2 style="color: white;">JavaScript works!</h2>';
+    </script>
+</body>
+</html>
