@@ -1,0 +1,15 @@
+# Ignore everything by default
+**
+
+# Allow only the Apps Script project files
+!appsscript.json
+!code.js
+!api.js
+!index.html
+!css.html
+!js.html
+!app.html
+
+# Always ignore node_modules and git
+node_modules/**
+.git/**

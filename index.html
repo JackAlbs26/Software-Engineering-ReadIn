@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReadIn - Reading List App</title>
+    <base target="_top">
+    <style>
+    <?!= includes("css.html"); ?>
+    </style>
+</head>
+<body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root">
+        <div style="padding: 20px; font-family: Arial; color: #333;">
+            <h1>Loading React App...</h1>
+            <p>If you see this message for more than a few seconds, React failed to load.</p>
+        </div>
+    </div>
+    <script>
+        console.log('HTML loaded');
+        console.log('Root element:', document.getElementById('root'));
+        
+        // Catch any errors
+        window.addEventListener('error', function(e) {
+            console.error('Error caught:', e.error);
+            document.getElementById('root').innerHTML = 
+                '<div style="padding: 20px; color: red; font-family: Arial;">' +
+                '<h2>Error loading React:</h2>' +
+                '<pre>' + (e.error ? e.error.stack : e.message) + '</pre>' +
+                '</div>';
+        });
+        
+        // Check if React loaded after script executes
+        setTimeout(function() {
+            console.log('Checking React after timeout...');
+            if (document.getElementById('root').innerHTML.includes('Loading React App')) {
+                console.error('React did not mount - checking why...');
+                console.log('Window.React:', typeof window.React);
+                console.log('Window.ReactDOM:', typeof window.ReactDOM);
+            } else {
+                console.log('React mounted successfully!');
+            }
+        }, 2000);
+    </script>
+    <script>
+    <?!= includes("js.html"); ?>
+    </script>
+    <script>
+        console.log('After React script loaded');
+        console.log('Document ready');
+    </script>
+</body>
+</html>
